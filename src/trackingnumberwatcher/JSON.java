@@ -18,7 +18,7 @@ public class JSON
     private URL url;
     private BufferedReader in;
     private String line, all = "";
-    private TranckingNumberWatcherDBConn dbConn = new TranckingNumberWatcherDBConn();
+    private TrackingNumberWatcherDBConn dbConn = new TrackingNumberWatcherDBConn();
     
     public boolean isValid(String url)
     {

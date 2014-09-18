@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package trackingnumberwatcher;
 
 import java.sql.*;
@@ -11,25 +7,25 @@ import java.util.logging.Logger;
  *
  * @author guilherme
  */
-public class TranckingNumberWatcherDBConn
+public class TrackingNumberWatcherDBConn
 {
     private Connection c = null;
     private Statement stmt = null;
     private ResultSet rs = null;
-    private static String jdbc = "org.sqlite.JDBC";
-    private static String connFile = "jdbc:sqlite:/home/guilherme/Desktop/tnw.db";
-    private static String codTableName = "cod_rastreio"; //mudar that name???
-    private static String dadoTableName = "dado";
+    private static final String jdbc = "org.sqlite.JDBC";
+    private static final String connFile = "jdbc:sqlite:/home/guilherme/Desktop/tnw.db";
+    private static final String tableCodName = "cod_rastreio"; //mudar that name???
+    private static final String tableDadoName = "dado";
     private int id_cod;
-    private String cod;
     private JSON json;
+    private String lastDate, lastAcao;
     
     
     public void initiateDB()
     {   
         System.out.println("Criando as tabelas do barulho...");
-        sqlQuery("CREATE TABLE IF NOT EXISTS " + codTableName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, cod TEXT NOT NULL, nome TEXT NOT NULL)");
-        sqlQuery("CREATE TABLE IF NOT EXISTS " + dadoTableName + "(id INTEGER PRIMARY KEY AUTOINCREMENT, id_cod INTEGER NOT NULL, data TEXT NOT NULL, local TEXT NOT NULL, acao TEXT NOT NULL, detalhes TEXT NOT NULL)");
+        sqlQuery("CREATE TABLE IF NOT EXISTS " + tableCodName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, cod TEXT NOT NULL, nome TEXT NOT NULL)");
+        sqlQuery("CREATE TABLE IF NOT EXISTS " + tableDadoName + "(id INTEGER PRIMARY KEY AUTOINCREMENT, id_cod INTEGER NOT NULL, data DATE NOT NULL, local TEXT NOT NULL, acao TEXT NOT NULL, detalhes TEXT NOT NULL)");
     }
     
     private void sqlQuery(String query)
@@ -39,7 +35,6 @@ public class TranckingNumberWatcherDBConn
             Class.forName(jdbc);
             c = DriverManager.getConnection(connFile);
             c.setAutoCommit(false);
-            System.out.println("SQL query over here.");
             stmt = c.createStatement();
             stmt.executeUpdate(query);
             stmt.close();
@@ -55,15 +50,17 @@ public class TranckingNumberWatcherDBConn
     public void insertNewCod(String cod, String nome)
     {
         System.out.println("Here comes the cod insertion");
-        this.cod = cod;
-        sqlQuery("INSERT INTO " + codTableName + " (cod, nome) VALUES ('"+ cod +"', '"+ nome +"');");
+        sqlQuery("INSERT INTO " + tableCodName + " (cod, nome) VALUES ('"+ cod +"', '"+ nome +"');");
     }
     
     public void insertNewData(String cod_rastreio)
     {
         id_cod = getId_cod(cod_rastreio);
         json = new JSON();
-        json.getData(id_cod, cod_rastreio);
+        if(id_cod == 0)
+            System.out.println("id veio zerado, fera.");
+        else
+            json.getData(id_cod, cod_rastreio);
     }
     
     public int getId_cod(String cod)
@@ -72,33 +69,26 @@ public class TranckingNumberWatcherDBConn
         int id = 0;
         try
         {
-            ResultSet response = responseQuery("SELECT id FROM " + codTableName + " WHERE cod = '"+ cod + "'");
-            //response = responseQuery("SELECT id FROM " + codTableName + " WHERE cod = 'RI025832971CN';");
+            ResultSet response = responseQuery("SELECT id FROM " + tableCodName + " WHERE cod = '"+ cod + "'");
             if(response.next())
-            {
                 id = response.getInt("id");
-            }
-            else
-                id = -1;
             c.close();
         }
         catch (SQLException ex)
         {
-            Logger.getLogger(TranckingNumberWatcherDBConn.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(TrackingNumberWatcherDBConn.class.getName()).log(Level.SEVERE, null, ex);
         }
-        System.out.println("----" + id + "----");
         return id;
     }
     
     public void insertJSONData(int id_cod, String data, String local, String acao, String detalhes)
     {
         System.out.println("Here comes the data insertion");
-        sqlQuery("INSERT INTO " + dadoTableName + " (id_cod, data, local, acao, detalhes) VALUES ('" + id_cod + "', '" + data + "', '" + local + "', '" + acao + "', '" + detalhes + "');");
+        sqlQuery("INSERT INTO " + tableDadoName + " (id_cod, data, local, acao, detalhes) VALUES ('" + id_cod + "', '" + data + "', '" + local + "', '" + acao + "', '" + detalhes + "');");
     }
     
     public ResultSet responseQuery(String query)
     {
-        System.out.println("Retornando algo pra alguem.");
         try
         {
             Class.forName(jdbc);
@@ -106,7 +96,6 @@ public class TranckingNumberWatcherDBConn
 
             stmt = c.createStatement();
             rs = stmt.executeQuery(query);
-            System.out.println("Opa! Fechar a conexao!");
         }
         catch ( Exception e )
         {
@@ -116,25 +105,49 @@ public class TranckingNumberWatcherDBConn
         return rs;
     }
     
-    public ResultSet refreshTable()
+    public ResultSet getNameAndCod() throws SQLException
     {
-        try
-        {
-            Class.forName(jdbc);
-            c = DriverManager.getConnection(connFile);
-
-            stmt = c.createStatement();
-            rs = stmt.executeQuery( "SELECT * FROM cod_rastreio;" );
-        }
-        catch ( Exception e )
-        {
-            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
-        }
-        
+        rs = responseQuery("SELECT * FROM " + tableCodName + ";");
         return rs;
     }
     
-    public void teste() //print table
+    public String lastMovementation(String cod_rastreio)
+    {      
+        id_cod = getId_cod(cod_rastreio);
+        System.out.println("id = " + id_cod);
+        if(id_cod == 0)
+            System.out.println("Chora pro id que veio zerado!");
+        else
+        {
+            try
+            {
+                System.out.println("Calculating last movementation date.");
+                rs = responseQuery("SELECT data, acao FROM " + tableDadoName + " WHERE id_cod = "+ id_cod);
+                while(rs.next())
+                {
+                    lastDate = rs.getString("data");
+                    lastAcao = rs.getString("acao");
+                }
+            }
+            catch (Exception e)
+            {
+                System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+            }
+        }
+        return lastAcao; 
+    }
+    
+    public void delete(String collumName, String value)
+    {
+        out("Here comes the deletion!");
+        id_cod = getId_cod(value);
+        sqlQuery("DELETE FROM " + tableDadoName + " WHERE id_cod = '" + id_cod + "'");
+        sqlQuery("DELETE FROM " + tableCodName + " WHERE " + collumName + " = '" + value + "'");
+    }
+    
+    private void out(String out){System.out.println(out);}
+    
+    public void printCodTable()
     {
         try
         {
@@ -142,7 +155,7 @@ public class TranckingNumberWatcherDBConn
             c = DriverManager.getConnection(connFile);
 
             stmt = c.createStatement();
-            rs = stmt.executeQuery( "SELECT * FROM cod_rastreio;" );
+            rs = stmt.executeQuery("SELECT * FROM " + tableCodName + ";");
             while ( rs.next() )
             {
                 int id = rs.getInt("id");
@@ -164,16 +177,16 @@ public class TranckingNumberWatcherDBConn
         }
     }
     
-    public void teste2() //print table
+    public void printDadoTable()
     {
-        System.out.println("----------------------teste 2 here----------------------");
+        System.out.println("----------------------Dado----------------------");
         try
         {
             Class.forName(jdbc);
             c = DriverManager.getConnection(connFile);
 
             stmt = c.createStatement();
-            rs = stmt.executeQuery( "SELECT * FROM dado;" );
+            rs = stmt.executeQuery("SELECT * FROM " + tableDadoName + ";");
             while ( rs.next() )
             {
                 int id = rs.getInt("id");
