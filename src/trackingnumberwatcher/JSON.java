@@ -19,6 +19,7 @@ public class JSON
     private BufferedReader in;
     private String line, all = "";
     private TrackingNumberWatcherDBConn dbConn = new TrackingNumberWatcherDBConn();
+    private int hash;
     
     public boolean isValid(String url)
     {
@@ -47,11 +48,6 @@ public class JSON
         return flag;
     }
     
-    public void parseJSON(URL url)
-    {
-        
-    }
-    
     public void getData(int id_cod, String cod_rastreio)
     {
         JSONParser parser = new JSONParser();
@@ -63,11 +59,10 @@ public class JSON
             in = new BufferedReader(new InputStreamReader(this.url.openStream()));
             while ((line = in.readLine()) != null)
             {
-                System.out.println("while");
                 all += line;
             }
             in.close();
-            
+            hash = all.hashCode();
             a = (JSONArray) parser.parse(all);
             for (Object o : a)
             {
@@ -80,6 +75,7 @@ public class JSON
                 
                 dbConn.insertJSONData(id_cod, data, local, acao, detalhes);
             }
+            dbConn.insertHash(hash, cod_rastreio);
         }
         catch (org.json.simple.parser.ParseException ex) {
             Logger.getLogger(JSON.class.getName()).log(Level.SEVERE, null, ex);
@@ -87,6 +83,26 @@ public class JSON
         catch (IOException ex) {
             Logger.getLogger(JSON.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public int getWebHash(String cod)
+    {
+        try
+        {
+            String url = "http://developers.agenciaideias.com.br/correios/rastreamento/json/" + cod;
+            this.url = new URL(url);
+            in = new BufferedReader(new InputStreamReader(this.url.openStream()));
+            while ((line = in.readLine()) != null)
+            {
+                all += line;
+            }
+            in.close();
+            hash = all.hashCode();
+        }
+        catch (IOException ex) {
+            Logger.getLogger(JSON.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return hash;
     }
     
     // TRASH_LINE_TRASH_LINE_TRASH_LINE_TRASH_LINE_TRASH_LINE_TRASH_LINE_TRASH_LINE_TRASH_LINE_TRASH_LINE
@@ -100,7 +116,6 @@ public class JSON
             in = new BufferedReader(new InputStreamReader(url.openStream()));
             while ((line = in.readLine()) != null)
             {
-                System.out.println("while");
                 all += line;
             }
             in.close();

@@ -16,8 +16,9 @@ public class TrackingNumberWatcherView extends FrameView {
     private ResultSet rs;
     private DefaultTableModel model;
     private TrackingNumberWatcherDBConn dbConn = new TrackingNumberWatcherDBConn();
-    private JDialog addFrame, detailsFrame, aboutBox;
-    private String lastDate, value, collumName;
+    private TrackingNumberWatcherDetailsFrame detailsFrame;
+    private JDialog addFrame, aboutBox;
+    private String lastDate, codValue;
     
     public TrackingNumberWatcherView(SingleFrameApplication app) {
         super(app);
@@ -250,13 +251,15 @@ public class TrackingNumberWatcherView extends FrameView {
     private void out(String out){System.out.println(out);}
     
     private void detalhesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_detalhesButtonActionPerformed
-        if (detailsFrame == null)
+        if(mainTable.getSelectedRow() != -1)
         {
-            JFrame mainFrame = TrackingNumberWatcherApp.getApplication().getMainFrame();
-            detailsFrame = new TrackingNumberWatcherDetailsFrame(mainFrame, true);
-            detailsFrame.setLocationRelativeTo(mainFrame);
+            codValue = getCodFromCollum();
+            detailsFrame = new TrackingNumberWatcherDetailsFrame(codValue);
+            detailsFrame.setLocationRelativeTo(null);
+            detailsFrame.setVisible(true);
         }
-        TrackingNumberWatcherApp.getApplication().show(detailsFrame);
+        else
+            out("Chora e clica em algo seu einimal!");
     }//GEN-LAST:event_detalhesButtonActionPerformed
 
     private void sairButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sairButtonActionPerformed
@@ -266,31 +269,49 @@ public class TrackingNumberWatcherView extends FrameView {
     private void removerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removerButtonActionPerformed
         model = (DefaultTableModel) mainTable.getModel();
         
-        value = model.getValueAt(mainTable.getSelectedRow(), mainTable.getSelectedColumn()).toString();
-        convertCollumName(model.getColumnName(mainTable.getSelectedColumn()));
-        out(collumName + value);
-        dbConn.delete(collumName, value);
+        codValue = getCodFromCollum();
+        dbConn.delete(codValue, true);
         loadSavedData();
     }//GEN-LAST:event_removerButtonActionPerformed
-
-    private void convertCollumName(String collumName)
-    {
-        if(collumName.equals(model.getColumnName(1))) //Nome
-            this.collumName = "cod";
-        else
-            lastDateWasSelected();
-    }
-    
-    private void lastDateWasSelected()
-    {
-        value = model.getValueAt(mainTable.getSelectedRow(), 1).toString();
-        collumName = "cod";
-    }
     
     private void esconderButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_esconderButtonActionPerformed
-        loadSavedData();
+        checkAtt();
     }//GEN-LAST:event_esconderButtonActionPerformed
 
+    private void checkAtt()
+    {
+        out("Checkando atualização");
+        JSON json = new JSON();
+        try
+        {
+            rs = dbConn.getNameAndCod();
+            while(rs.next())
+            {
+                String  cod = rs.getString("cod");
+                int webHash = json.getWebHash(cod);
+                int localHash = dbConn.getLocalHash(cod);
+                out("web: " + webHash + "\tlocal: " + localHash);
+                if(webHash != localHash)
+                {
+                    out("Processando alterações...");
+                    dbConn.delete(cod, false);//remover das tabelas o cod
+                    dbConn.insertNewData(cod);//re-inserir o cod na tabela
+                    loadSavedData();
+                    out(cod + " MUDOU AMIGO!");//avisar os amiguinhos
+                }
+            }
+        }
+        catch (SQLException ex)
+        {
+            Logger.getLogger(TrackingNumberWatcherView.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private String getCodFromCollum()
+    {
+        return model.getValueAt(mainTable.getSelectedRow(), 1).toString();
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton adicionarButton;
     private javax.swing.JPanel contents;

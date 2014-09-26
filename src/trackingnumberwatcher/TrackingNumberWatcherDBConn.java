@@ -24,7 +24,7 @@ public class TrackingNumberWatcherDBConn
     public void initiateDB()
     {   
         System.out.println("Criando as tabelas do barulho...");
-        sqlQuery("CREATE TABLE IF NOT EXISTS " + tableCodName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, cod TEXT NOT NULL, nome TEXT NOT NULL)");
+        sqlQuery("CREATE TABLE IF NOT EXISTS " + tableCodName + " (id INTEGER PRIMARY KEY AUTOINCREMENT, cod TEXT NOT NULL, nome TEXT NOT NULL, hash INTEGER)");
         sqlQuery("CREATE TABLE IF NOT EXISTS " + tableDadoName + "(id INTEGER PRIMARY KEY AUTOINCREMENT, id_cod INTEGER NOT NULL, data DATE NOT NULL, local TEXT NOT NULL, acao TEXT NOT NULL, detalhes TEXT NOT NULL)");
     }
     
@@ -63,6 +63,12 @@ public class TrackingNumberWatcherDBConn
             json.getData(id_cod, cod_rastreio);
     }
     
+    public void insertHash(int hash, String cod)
+    {
+        out("Inserindo hash...");
+        sqlQuery("UPDATE " + tableCodName + " SET hash = " + hash + " WHERE cod = '" + cod + "'");
+    }
+    
     public int getId_cod(String cod)
     {
         System.out.println("Getting cod ID...");
@@ -99,7 +105,8 @@ public class TrackingNumberWatcherDBConn
         }
         catch ( Exception e )
         {
-            System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+            out("deu bads no response query");
+            e.printStackTrace();
         }
         
         return rs;
@@ -114,7 +121,6 @@ public class TrackingNumberWatcherDBConn
     public String lastMovementation(String cod_rastreio)
     {      
         id_cod = getId_cod(cod_rastreio);
-        System.out.println("id = " + id_cod);
         if(id_cod == 0)
             System.out.println("Chora pro id que veio zerado!");
         else
@@ -137,15 +143,49 @@ public class TrackingNumberWatcherDBConn
         return lastAcao; 
     }
     
-    public void delete(String collumName, String value)
+    public void delete(String cod_rastreio, boolean eraseAll)
     {
         out("Here comes the deletion!");
-        id_cod = getId_cod(value);
+        id_cod = getId_cod(cod_rastreio);
         sqlQuery("DELETE FROM " + tableDadoName + " WHERE id_cod = '" + id_cod + "'");
-        sqlQuery("DELETE FROM " + tableCodName + " WHERE " + collumName + " = '" + value + "'");
+        if(eraseAll)
+            sqlQuery("DELETE FROM " + tableCodName + " WHERE cod = '" + cod_rastreio + "'");
     }
     
     private void out(String out){System.out.println(out);}
+    
+    public ResultSet getDetails(int id)
+    {
+        rs = responseQuery("SELECT data, local, acao, detalhes FROM " + tableDadoName + " WHERE id_cod = " + id);
+        return rs;
+    }
+    
+    public String getNameFromCod(String cod)
+    {
+        String resp = "3RR0!";
+        try {
+            rs = responseQuery("SELECT nome FROM " + tableCodName + " WHERE cod = '" + cod + "'");
+            rs.next();
+            resp = rs.getString("nome");
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return resp;
+    }
+    
+    public int getLocalHash(String cod)
+    {
+        int resp = 1;
+        try
+        {
+            rs = responseQuery("SELECT hash FROM " + tableCodName + " WHERE cod = '" + cod + "'");
+            rs.next();
+            resp = rs.getInt("hash");
+            } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return resp;
+    }
     
     public void printCodTable()
     {
@@ -161,9 +201,11 @@ public class TrackingNumberWatcherDBConn
                 int id = rs.getInt("id");
                 String  name = rs.getString("cod");
                 String age  = rs.getString("nome");
-                System.out.println( "ID = " + id );
-                System.out.println( "cod = " + name );
-                System.out.println( "nome = " + age );
+                int hash = rs.getInt("hash");
+                System.out.println("ID = " + id );
+                System.out.println("cod = " + name );
+                System.out.println("nome = " + age );
+                System.out.println("hash = " + hash);
 
                 System.out.println();
             }

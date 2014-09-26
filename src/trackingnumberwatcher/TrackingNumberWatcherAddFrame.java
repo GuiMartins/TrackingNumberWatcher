@@ -147,7 +147,7 @@ public class TrackingNumberWatcherAddFrame extends javax.swing.JDialog {
             dbConn.insertNewData(cod_rastreio);
         }
         else
-            System.out.println("Yeah, he is goddam' right.");
+            System.out.println("Verifique o codigo de rastreio.");
     }//GEN-LAST:event_okButtonActionPerformed
     
     /**
