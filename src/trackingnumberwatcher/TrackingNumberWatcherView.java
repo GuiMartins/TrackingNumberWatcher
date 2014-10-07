@@ -1,5 +1,15 @@
 package trackingnumberwatcher;
 
+import java.awt.AWTException;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
@@ -12,6 +22,7 @@ import org.jdesktop.application.SingleFrameApplication;
 import org.jdesktop.application.FrameView;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 public class TrackingNumberWatcherView extends FrameView {
@@ -19,48 +30,102 @@ public class TrackingNumberWatcherView extends FrameView {
     private ResultSet rs;
     private DefaultTableModel model;
     private TrackingNumberWatcherDBConn dbConn = new TrackingNumberWatcherDBConn();
-    private TrackingNumberWatcherDetailsFrame detailsFrame;
-    private JDialog addFrame, aboutBox;
+    private JDialog aboutBox;
     private String lastDate, codValue;
-    private int attRate = 1; //1h
+    private int attRate = 1; //hora(s)
     private Timer timer = new Timer();
+    private TrayIcon trayicon;
+    private PopupMenu popupmenu;
+    private MenuItem menuItemSair, menuItemAbrir, menuItemNome;
+    private JFrame mainFrame = TrackingNumberWatcherApp.getApplication().getMainFrame();
+    private TrackingNumberWatcherApp appFrame = TrackingNumberWatcherApp.getApplication();
+    private JSON json = new JSON();
+    private boolean flag = false;
     
-    public TrackingNumberWatcherView(SingleFrameApplication app) {
+    public TrackingNumberWatcherView(SingleFrameApplication app){
         super(app);
         initComponents();
         dbConn.initiateDB();
         loadSavedData();
         attCheck();
+        
+        if(!SystemTray.isSupported())
+            JOptionPane.showMessageDialog(null,"Your system doesn't supports System Tray","ERROR",0);
+        else
+            implementTray();
     }
+    private void implementTray(){
+        popupmenu = new PopupMenu();
+        
+        menuItemNome = new MenuItem("Rastreeitor");
+        menuItemSair = new MenuItem("Sair");
+        menuItemAbrir = new MenuItem("Mostrar");
+        
+        menuItemSair.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent exx)
+            {
+                timer.cancel();
+                System.exit(0);
+            }
+        });
+        menuItemAbrir.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent exx)
+            {
+                openFromTray();
+            }
+        });
+        popupmenu.add(menuItemNome).setEnabled(false);
+        popupmenu.addSeparator();
+        popupmenu.add(menuItemAbrir);
+        popupmenu.add(menuItemSair);
+        
+        trayicon = new TrayIcon(Toolkit.getDefaultToolkit().getImage("/home/guilherme/NetBeansProjects/TrackingNumberWatcher/icon.png"),"TNW",popupmenu);
 
-    private void attCheck()
-    {
+        trayicon.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseClicked(MouseEvent e)
+            {
+                if(e.getButton() == MouseEvent.BUTTON1)
+                {
+                    openFromTray();
+                }
+            }
+            
+            public void actionPerformed(ActionEvent e) {
+                    System.out.println("Message Clicked");
+                }
+        }); 
+    }
+    public void openFromTray(){
+        mainFrame.setContentPane(mainPanel);
+        appFrame.show(mainFrame);
+        SystemTray.getSystemTray().remove(trayicon);
+    }
+    private void attCheck(){
         timer.schedule( new TimerTask()
         {
             public void run()
             {
-                System.out.println("------------------------------------\n" + new Date());
-                System.out.println("atualizando a cada " + attRate + " hora(s)");
+                out("atualizando a cada " + attRate + " hora(s)");
                 checkMovementation();
             }
         }, 0, attRate*360000);
     }
-    
     @Action
     public void showAboutBox() {
         if (aboutBox == null) {
-            JFrame mainFrame = TrackingNumberWatcherApp.getApplication().getMainFrame();
             aboutBox = new TrackingNumberWatcherAboutBox(mainFrame);
             aboutBox.setLocationRelativeTo(mainFrame);
         }
         TrackingNumberWatcherApp.getApplication().show(aboutBox);
     }
-    
-    private void loadSavedData()
-    {
+    private void loadSavedData(){
         try
         {
-            System.out.println("Loading saved data or refreshing table.");
+            out("Loading saved data or refreshing table.");
             model = (DefaultTableModel) mainTable.getModel();
             model.setRowCount(0);
             
@@ -78,7 +143,6 @@ public class TrackingNumberWatcherView extends FrameView {
             Logger.getLogger(TrackingNumberWatcherView.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -96,11 +160,6 @@ public class TrackingNumberWatcherView extends FrameView {
         esconderButton = new javax.swing.JButton();
         sairButton = new javax.swing.JButton();
         atualizarButton = new javax.swing.JButton();
-        menuBar = new javax.swing.JMenuBar();
-        javax.swing.JMenu fileMenu = new javax.swing.JMenu();
-        javax.swing.JMenuItem exitMenuItem = new javax.swing.JMenuItem();
-        javax.swing.JMenu helpMenu = new javax.swing.JMenu();
-        javax.swing.JMenuItem aboutMenuItem = new javax.swing.JMenuItem();
 
         mainPanel.setName("mainPanel"); // NOI18N
 
@@ -167,7 +226,7 @@ public class TrackingNumberWatcherView extends FrameView {
             }
         });
 
-        atualizarLabel.setFont(new java.awt.Font("Dialog", 1, 10)); // NOI18N
+        atualizarLabel.setFont(new java.awt.Font("Dialog", 1, 10));
         atualizarLabel.setText(resourceMap.getString("atualizarLabel.text")); // NOI18N
         atualizarLabel.setToolTipText(resourceMap.getString("atualizarLabel.toolTipText")); // NOI18N
         atualizarLabel.setName("atualizarLabel"); // NOI18N
@@ -237,7 +296,7 @@ public class TrackingNumberWatcherView extends FrameView {
                 .addComponent(atualizarCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(atualizarButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 57, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 78, Short.MAX_VALUE)
                 .addComponent(esconderButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(sairButton)
@@ -260,7 +319,7 @@ public class TrackingNumberWatcherView extends FrameView {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, contentsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(contentsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(tableScrollPane, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 338, Short.MAX_VALUE)
+                    .addComponent(tableScrollPane, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 359, Short.MAX_VALUE)
                     .addComponent(buttonsPanel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -276,68 +335,45 @@ public class TrackingNumberWatcherView extends FrameView {
         );
         mainPanelLayout.setVerticalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(mainPanelLayout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(contents, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
-        menuBar.setName("menuBar"); // NOI18N
-
-        fileMenu.setText(resourceMap.getString("fileMenu.text")); // NOI18N
-        fileMenu.setName("fileMenu"); // NOI18N
-
-        javax.swing.ActionMap actionMap = org.jdesktop.application.Application.getInstance(trackingnumberwatcher.TrackingNumberWatcherApp.class).getContext().getActionMap(TrackingNumberWatcherView.class, this);
-        exitMenuItem.setAction(actionMap.get("quit")); // NOI18N
-        exitMenuItem.setText(resourceMap.getString("exitMenuItem.text")); // NOI18N
-        exitMenuItem.setName("exitMenuItem"); // NOI18N
-        fileMenu.add(exitMenuItem);
-
-        menuBar.add(fileMenu);
-
-        helpMenu.setText(resourceMap.getString("helpMenu.text")); // NOI18N
-        helpMenu.setName("helpMenu"); // NOI18N
-
-        aboutMenuItem.setAction(actionMap.get("showAboutBox")); // NOI18N
-        aboutMenuItem.setText(resourceMap.getString("aboutMenuItem.text")); // NOI18N
-        aboutMenuItem.setName("aboutMenuItem"); // NOI18N
-        helpMenu.add(aboutMenuItem);
-
-        menuBar.add(helpMenu);
-
         setComponent(mainPanel);
-        setMenuBar(menuBar);
     }// </editor-fold>//GEN-END:initComponents
-
     private void adicionarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_adicionarButtonActionPerformed
-        if (addFrame == null)
+        String nome = "", codigoRastreio = "";
+        
+        codigoRastreio = (String)JOptionPane.showInputDialog(mainFrame,"Informe o código de Rastreio: ","Adicionando novo objeto",JOptionPane.PLAIN_MESSAGE);
+        flag = json.isValid(codigoRastreio);
+        if(flag)
         {
-            JFrame mainFrame = TrackingNumberWatcherApp.getApplication().getMainFrame();
-            addFrame = new TrackingNumberWatcherAddFrame(mainFrame);
-            addFrame.setLocationRelativeTo(mainFrame);
-        }
-        TrackingNumberWatcherApp.getApplication().show(addFrame);
+            nome = (String)JOptionPane.showInputDialog(mainFrame,"Ok, agora informe o nome de identificaçao: ","Adicionando novo objeto",JOptionPane.PLAIN_MESSAGE);
+            if(!dbConn.insertNewCod(codigoRastreio, nome))
+                dbConn.insertNewData(codigoRastreio);
+        }  
+        else
+            JOptionPane.showMessageDialog(mainFrame, "Erro: Código de rastreio inválido.", "ERRO", JOptionPane.ERROR_MESSAGE);
         loadSavedData();
     }//GEN-LAST:event_adicionarButtonActionPerformed
-
     private void out(String out){System.out.println(out);}
-    
     private void detalhesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_detalhesButtonActionPerformed
         if(mainTable.getSelectedRow() != -1)
         {
             codValue = getCodFromCollum();
-            detailsFrame = new TrackingNumberWatcherDetailsFrame(codValue);
-            detailsFrame.setLocationRelativeTo(null);
-            detailsFrame.setVisible(true);
+            dbConn.showDetailsFrame(getCodFromCollum());
         }
         else
-            out("Chora e clica em algo seu einimal!");
+            JOptionPane.showMessageDialog(mainFrame, "Selecione um objeto antes.", "ERRO", JOptionPane.ERROR_MESSAGE);
     }//GEN-LAST:event_detalhesButtonActionPerformed
-
     private void sairButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sairButtonActionPerformed
+        dbConn.printCodTable();
+        dbConn.printDadoTable();
+        timer.cancel();
         System.exit(0);
     }//GEN-LAST:event_sairButtonActionPerformed
-
     private void removerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removerButtonActionPerformed
         model = (DefaultTableModel) mainTable.getModel();
         
@@ -345,35 +381,41 @@ public class TrackingNumberWatcherView extends FrameView {
         dbConn.delete(codValue, true);
         loadSavedData();
     }//GEN-LAST:event_removerButtonActionPerformed
-    
     private void esconderButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_esconderButtonActionPerformed
+        appFrame.hide(this);
+        mainFrame.setVisible(false); //redundancia da POG over here.
+        try
+        {
+            SystemTray.getSystemTray().add(trayicon);
+        }
+        catch(AWTException e)
+        {
+            e.printStackTrace();
+        }
+        trayicon.displayMessage(":D","Estou aqui.",TrayIcon.MessageType.NONE);
         
     }//GEN-LAST:event_esconderButtonActionPerformed
-
     private void atualizarComboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_atualizarComboActionPerformed
         timer.cancel();
         timer = new Timer();
         attRate = atualizarCombo.getSelectedIndex() + 1;
         attCheck();
     }//GEN-LAST:event_atualizarComboActionPerformed
-
     private void atualizarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_atualizarButtonActionPerformed
         checkMovementation();
     }//GEN-LAST:event_atualizarButtonActionPerformed
-
-    private void checkMovementation()
-    {
+    private void checkMovementation(){
         out("Checkando atualização");
-        JSON json = new JSON();
         try
         {
+            out("" + new Date());
             rs = dbConn.getNameAndCod();
             while(rs.next())
             {
                 String  cod = rs.getString("cod");
-                int webHash = json.getWebHash(cod);
-                int localHash = dbConn.getLocalHash(cod);
-                out("web: " + webHash + "\tlocal: " + localHash);
+                long webHash = json.getWebHash(cod);
+                long localHash = dbConn.getLocalHash(cod);
+                out("web  : " + webHash + "\nlocal: " + localHash);
                 if(webHash != localHash)
                 {
                     out("Processando alterações...");
@@ -381,6 +423,7 @@ public class TrackingNumberWatcherView extends FrameView {
                     dbConn.insertNewData(cod);//re-inserir o cod na tabela
                     loadSavedData();
                     out(cod + " MUDOU AMIGO!");//avisar os amiguinhos
+                    trayicon.displayMessage("Atualizou!!","Tem novidades sobre o código " + cod + ".\nDê uma olhada!",TrayIcon.MessageType.INFO);
                 }
             }
         }
@@ -389,12 +432,9 @@ public class TrackingNumberWatcherView extends FrameView {
             Logger.getLogger(TrackingNumberWatcherView.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    private String getCodFromCollum()
-    {
+    private String getCodFromCollum(){
         return model.getValueAt(mainTable.getSelectedRow(), 1).toString();
     }
-    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton adicionarButton;
     private javax.swing.JButton atualizarButton;
@@ -406,7 +446,6 @@ public class TrackingNumberWatcherView extends FrameView {
     private javax.swing.JButton esconderButton;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JTable mainTable;
-    private javax.swing.JMenuBar menuBar;
     private javax.swing.JButton removerButton;
     private javax.swing.JButton sairButton;
     private javax.swing.JScrollPane tableScrollPane;

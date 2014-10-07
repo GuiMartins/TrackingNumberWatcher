@@ -1,54 +1,31 @@
 package trackingnumberwatcher;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.ArrayList;
 import javax.swing.table.DefaultTableModel;
 
-/**
- *
- * @author guilherme
- */
 public class TrackingNumberWatcherDetailsFrame extends javax.swing.JFrame {
-    private TrackingNumberWatcherDBConn dbConn = new TrackingNumberWatcherDBConn();
     private DefaultTableModel model;
-    private ResultSet rs;
     
-    /** Creates new form TrackingNumberWatcherDetailsFrame */
-    public TrackingNumberWatcherDetailsFrame(String codValue) {
+    public TrackingNumberWatcherDetailsFrame(String nome, String cod, ArrayList al){
         initComponents();
-        this.setName("123123123");
-        loadData(codValue);
+        loadData(nome, cod, al);
     }
-
-    private void loadData(String codValue)
-    {
-        int id = dbConn.getId_cod(codValue);
-        try
+    private void loadData(String nome, String cod, ArrayList al){
+        model = (DefaultTableModel) detailsTable.getModel();
+        model.setRowCount(0);
+        tNome.setText(nome);
+        tCodigo.setText(cod);
+        for (int i = 0; i < al.size();)
         {
-            model = (DefaultTableModel) detailsTable.getModel();
-            model.setRowCount(0);
-            tNome.setText(dbConn.getNameFromCod(codValue));
-            tCodigo.setText(codValue);
-            rs = dbConn.getDetails(id);
-            while(rs.next())
+            model.insertRow(model.getRowCount(), new Object[]
             {
-                String data  = rs.getString("data");
-                String local = rs.getString("local");
-                String acao = rs.getString("acao");
-                String detalhes = rs.getString("detalhes");
-                
-                System.out.println();
-                model.insertRow(model.getRowCount(), new Object[] {data, local, acao, detalhes});
-            }
-        }     
-        catch (SQLException ex)
-        {
-            Logger.getLogger(TrackingNumberWatcherView.class.getName()).log(Level.SEVERE, null, ex);
+                al.get(i++).toString(),
+                al.get(i++).toString(),
+                al.get(i++).toString(),
+                al.get(i++).toString()
+            });
         }
     }
-    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -63,6 +40,11 @@ public class TrackingNumberWatcherDetailsFrame extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setName("Form"); // NOI18N
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         jScrollPane1.setName("jScrollPane1"); // NOI18N
 
@@ -166,16 +148,10 @@ public class TrackingNumberWatcherDetailsFrame extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    /**
-     * @param args the command line arguments
-     */
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        //nothing to see here...
+    }//GEN-LAST:event_formWindowClosing
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -192,9 +168,7 @@ public class TrackingNumberWatcherDetailsFrame extends javax.swing.JFrame {
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(TrackingNumberWatcherDetailsFrame.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
 
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
 
             public void run() {
