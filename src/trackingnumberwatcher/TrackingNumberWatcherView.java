@@ -38,7 +38,7 @@ public class TrackingNumberWatcherView extends FrameView {
     private Timer timer = new Timer();
     private TrayIcon trayicon;
     private PopupMenu popupmenu;
-    private MenuItem menuItemSair, menuItemAbrir, menuItemNome;
+    private MenuItem menuItemSair, menuItemAbrir, menuItemNome, menuItemSobre;
     private JFrame mainFrame = TrackingNumberWatcherApp.getApplication().getMainFrame();
     private TrackingNumberWatcherApp appFrame = TrackingNumberWatcherApp.getApplication();
     private JSON json = new JSON();
@@ -83,15 +83,17 @@ public class TrackingNumberWatcherView extends FrameView {
     private void implementTray(){
         popupmenu = new PopupMenu();
         
-        menuItemNome = new MenuItem("Rastreeitor");
-        menuItemSair = new MenuItem("Sair");
-        menuItemAbrir = new MenuItem("Mostrar");
+        menuItemNome = new MenuItem(" Rastreeitor ");
+        menuItemSair = new MenuItem(" Sair ");
+        menuItemAbrir = new MenuItem(" Mostrar ");
+        menuItemSobre = new MenuItem(" Sobre ");
         
         menuItemSair.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent exx)
             {
                 timer.cancel();
+                SystemTray.getSystemTray().remove(trayicon);
                 System.exit(0);
             }
         });
@@ -102,13 +104,22 @@ public class TrackingNumberWatcherView extends FrameView {
                 openFromTray();
             }
         });
+        menuItemSobre.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent exx)
+            {
+                showAboutBox();
+            }
+        });
         popupmenu.add(menuItemNome).setEnabled(false);
         popupmenu.addSeparator();
         popupmenu.add(menuItemAbrir);
+        popupmenu.add(menuItemSobre);
+        popupmenu.addSeparator();
         popupmenu.add(menuItemSair);
         
-        trayicon = new TrayIcon(Toolkit.getDefaultToolkit().getImage("icon.png"),"Rastreeitor",popupmenu);
-
+        trayicon = new TrayIcon(Toolkit.getDefaultToolkit().getImage(System.getProperty("user.dir") + System.getProperty("file.separator") + "icon.png"),"Rastreeitor",popupmenu);
+        out(System.getProperty("user.dir") + System.getProperty("file.separator") + "icon.png");
         trayicon.addMouseListener(new MouseAdapter()
         {
             @Override
@@ -123,12 +134,21 @@ public class TrackingNumberWatcherView extends FrameView {
             public void actionPerformed(ActionEvent e) {
                     System.out.println("Message Clicked");
                 }
-        }); 
+        });
+        try
+        {
+            SystemTray.getSystemTray().add(trayicon);
+        }
+        catch(AWTException e)
+        {
+            JOptionPane.showMessageDialog(mainFrame, "Não foi possivel esconder o programa.", "ERRO", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }
     public void openFromTray(){
         mainFrame.setContentPane(mainPanel);
         appFrame.show(mainFrame);
-        SystemTray.getSystemTray().remove(trayicon);
+        //SystemTray.getSystemTray().remove(trayicon);
     }
     private void attCheck(){
         timer.schedule( new TimerTask()
@@ -336,7 +356,7 @@ public class TrackingNumberWatcherView extends FrameView {
             contentsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, contentsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 501, Short.MAX_VALUE)
+                .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 562, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -396,9 +416,8 @@ public class TrackingNumberWatcherView extends FrameView {
             JOptionPane.showMessageDialog(mainFrame, "Selecione um objeto antes.", "ERRO", JOptionPane.ERROR_MESSAGE);
     }//GEN-LAST:event_detalhesButtonActionPerformed
     private void sairButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_sairButtonActionPerformed
-        dbConn.printCodTable();
-        dbConn.printDadoTable();
         timer.cancel();
+        SystemTray.getSystemTray().remove(trayicon);
         System.exit(0);
     }//GEN-LAST:event_sairButtonActionPerformed
     private void removerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removerButtonActionPerformed
@@ -411,15 +430,6 @@ public class TrackingNumberWatcherView extends FrameView {
     private void esconderButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_esconderButtonActionPerformed
         appFrame.hide(this);
         mainFrame.setVisible(false); //redundancia da POG over here.
-        try
-        {
-            SystemTray.getSystemTray().add(trayicon);
-        }
-        catch(AWTException e)
-        {
-            JOptionPane.showMessageDialog(mainFrame, "Não foi possivel esconder o programa.", "ERRO", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
-        }
         trayicon.displayMessage(":D","Estou aqui.",TrayIcon.MessageType.NONE);
         
     }//GEN-LAST:event_esconderButtonActionPerformed
