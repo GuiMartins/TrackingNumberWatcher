@@ -10,6 +10,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.net.URL;
+import java.net.URLConnection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
@@ -32,7 +34,7 @@ public class TrackingNumberWatcherView extends FrameView {
     private TrackingNumberWatcherDBConn dbConn = new TrackingNumberWatcherDBConn();
     private JDialog aboutBox;
     private String lastDate, codValue;
-    private int attRate = 1; //hora(s)
+    private long attRate = 1; //hora(s)
     private Timer timer = new Timer();
     private TrayIcon trayicon;
     private PopupMenu popupmenu;
@@ -44,15 +46,39 @@ public class TrackingNumberWatcherView extends FrameView {
     
     public TrackingNumberWatcherView(SingleFrameApplication app){
         super(app);
-        initComponents();
-        dbConn.initiateDB();
-        loadSavedData();
-        attCheck();
+        if(isInternetConn())
+        {
+            initComponents();
+            dbConn.initiateDB();
+            loadSavedData();
+            attCheck();
         
-        if(!SystemTray.isSupported())
-            JOptionPane.showMessageDialog(null,"Your system doesn't supports System Tray","ERROR",0);
+            if(!SystemTray.isSupported())
+                JOptionPane.showMessageDialog(mainFrame,"Não será possivel esconder o programa na barra de notificação.","ERRO",JOptionPane.ERROR_MESSAGE);
+            else
+                implementTray();
+        }
         else
-            implementTray();
+        {
+           JOptionPane.showMessageDialog(mainFrame,"É necessário conexão com a internet. O programa esta sendo encerrado...","ERRO",JOptionPane.WARNING_MESSAGE); 
+           System.exit(0);
+        }
+    }
+    private boolean isInternetConn(){
+        boolean connectivity = false;
+        try
+        {
+            URL url = new URL("http://www.google.com/");
+            URLConnection conn = url.openConnection();
+            conn.connect();
+            connectivity = true;
+        }
+        catch (Exception e)
+        {
+            connectivity = false;
+            System.out.println("mia nets: " + e);
+        }
+        return connectivity;
     }
     private void implementTray(){
         popupmenu = new PopupMenu();
@@ -81,7 +107,7 @@ public class TrackingNumberWatcherView extends FrameView {
         popupmenu.add(menuItemAbrir);
         popupmenu.add(menuItemSair);
         
-        trayicon = new TrayIcon(Toolkit.getDefaultToolkit().getImage("/home/guilherme/NetBeansProjects/TrackingNumberWatcher/icon.png"),"TNW",popupmenu);
+        trayicon = new TrayIcon(Toolkit.getDefaultToolkit().getImage("icon.png"),"Rastreeitor",popupmenu);
 
         trayicon.addMouseListener(new MouseAdapter()
         {
@@ -112,7 +138,7 @@ public class TrackingNumberWatcherView extends FrameView {
                 out("atualizando a cada " + attRate + " hora(s)");
                 checkMovementation();
             }
-        }, 0, attRate*360000);
+        }, 0, attRate*60*60*1000);
     }
     @Action
     public void showAboutBox() {
@@ -140,6 +166,7 @@ public class TrackingNumberWatcherView extends FrameView {
         }     
         catch (SQLException ex)
         {
+            JOptionPane.showMessageDialog(mainFrame, "Nao foi possivel ler os dados no banco de dados.", "ERRO", JOptionPane.ERROR_MESSAGE);
             Logger.getLogger(TrackingNumberWatcherView.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -390,6 +417,7 @@ public class TrackingNumberWatcherView extends FrameView {
         }
         catch(AWTException e)
         {
+            JOptionPane.showMessageDialog(mainFrame, "Não foi possivel esconder o programa.", "ERRO", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
         trayicon.displayMessage(":D","Estou aqui.",TrayIcon.MessageType.NONE);
@@ -429,6 +457,7 @@ public class TrackingNumberWatcherView extends FrameView {
         }
         catch (SQLException ex)
         {
+            JOptionPane.showMessageDialog(mainFrame, "Houve um erro ao tentar checkar as atualizações.", "ERRO", JOptionPane.ERROR_MESSAGE);
             Logger.getLogger(TrackingNumberWatcherView.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

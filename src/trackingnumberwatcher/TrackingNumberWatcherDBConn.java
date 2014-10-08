@@ -12,7 +12,7 @@ public class TrackingNumberWatcherDBConn
     private Statement stmt = null;
     private ResultSet rs = null;
     private static final String jdbc = "org.sqlite.JDBC";
-    private static final String connFile = "jdbc:sqlite:/home/guilherme/Desktop/tnw.db";
+    private static final String connFile = "jdbc:sqlite:data.db";
     private static final String tableCodName = "cod_rastreio"; //mudar that name???
     private static final String tableDadoName = "dado";
     private int id_cod;
