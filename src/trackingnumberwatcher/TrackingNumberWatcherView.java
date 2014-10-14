@@ -38,7 +38,7 @@ public class TrackingNumberWatcherView extends FrameView {
     private Timer timer = new Timer();
     private TrayIcon trayicon;
     private PopupMenu popupmenu;
-    private MenuItem menuItemSair, menuItemAbrir, menuItemNome, menuItemSobre;
+    private MenuItem menuItemSair, menuItemAbrir, menuItemNome, menuItemSobre, menuItemAtt;
     private JFrame mainFrame = TrackingNumberWatcherApp.getApplication().getMainFrame();
     private TrackingNumberWatcherApp appFrame = TrackingNumberWatcherApp.getApplication();
     private JSON json = new JSON();
@@ -63,6 +63,9 @@ public class TrackingNumberWatcherView extends FrameView {
            JOptionPane.showMessageDialog(mainFrame,"É necessário conexão com a internet. O programa esta sendo encerrado...","ERRO",JOptionPane.WARNING_MESSAGE); 
            System.exit(0);
         }
+        //SessionStorage off
+        Logger logger = Logger.getLogger(org.jdesktop.application.SessionStorage.class.getName());
+        logger.setLevel(Level.OFF);
     }
     private boolean isInternetConn(){
         boolean connectivity = false;
@@ -87,6 +90,7 @@ public class TrackingNumberWatcherView extends FrameView {
         menuItemSair = new MenuItem(" Sair ");
         menuItemAbrir = new MenuItem(" Mostrar ");
         menuItemSobre = new MenuItem(" Sobre ");
+        menuItemAtt = new MenuItem(" Atualizar ");
         
         menuItemSair.addActionListener(new ActionListener()
         {
@@ -111,14 +115,22 @@ public class TrackingNumberWatcherView extends FrameView {
                 showAboutBox();
             }
         });
+        menuItemAtt.addActionListener(new ActionListener()
+        {
+            public void actionPerformed(ActionEvent exx)
+            {
+                checkMovementation();
+            }
+        });
         popupmenu.add(menuItemNome).setEnabled(false);
         popupmenu.addSeparator();
         popupmenu.add(menuItemAbrir);
+        popupmenu.add(menuItemAtt);
         popupmenu.add(menuItemSobre);
         popupmenu.addSeparator();
         popupmenu.add(menuItemSair);
         
-        trayicon = new TrayIcon(Toolkit.getDefaultToolkit().getImage(System.getProperty("user.dir") + System.getProperty("file.separator") + "icon.png"),"Rastreeitor",popupmenu);
+        trayicon = new TrayIcon(Toolkit.getDefaultToolkit().getImage("icon.png"),"Rastreeitor",popupmenu);
         out(System.getProperty("user.dir") + System.getProperty("file.separator") + "icon.png");
         trayicon.addMouseListener(new MouseAdapter()
         {
@@ -141,7 +153,7 @@ public class TrackingNumberWatcherView extends FrameView {
         }
         catch(AWTException e)
         {
-            JOptionPane.showMessageDialog(mainFrame, "Não foi possivel esconder o programa.", "ERRO", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Não foi possivel esconder o programa.", ":'(", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
     }
@@ -172,7 +184,7 @@ public class TrackingNumberWatcherView extends FrameView {
         try
         {
             out("Loading saved data or refreshing table.");
-            model = (DefaultTableModel) mainTable.getModel();
+            model = (DefaultTableModel) codsTable.getModel();
             model.setRowCount(0);
             
             rs = dbConn.getNameAndCod();
@@ -196,8 +208,8 @@ public class TrackingNumberWatcherView extends FrameView {
 
         mainPanel = new javax.swing.JPanel();
         contents = new javax.swing.JPanel();
-        tableScrollPane = new javax.swing.JScrollPane();
-        mainTable = new javax.swing.JTable();
+        codsTableScrollPane = new javax.swing.JScrollPane();
+        codsTable = new javax.swing.JTable();
         buttonsPanel = new javax.swing.JPanel();
         adicionarButton = new javax.swing.JButton();
         detalhesButton = new javax.swing.JButton();
@@ -207,15 +219,19 @@ public class TrackingNumberWatcherView extends FrameView {
         esconderButton = new javax.swing.JButton();
         sairButton = new javax.swing.JButton();
         atualizarButton = new javax.swing.JButton();
+        jSeparator1 = new javax.swing.JSeparator();
+        addInfo = new javax.swing.JPanel();
+        ultimaAttLabel = new javax.swing.JLabel();
+        ultimaAttValue = new javax.swing.JLabel();
 
         mainPanel.setName("mainPanel"); // NOI18N
 
         contents.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         contents.setName("contents"); // NOI18N
 
-        tableScrollPane.setName("tableScrollPane"); // NOI18N
+        codsTableScrollPane.setName("codsTableScrollPane"); // NOI18N
 
-        mainTable.setModel(new javax.swing.table.DefaultTableModel(
+        codsTable.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
@@ -238,13 +254,13 @@ public class TrackingNumberWatcherView extends FrameView {
                 return canEdit [columnIndex];
             }
         });
-        mainTable.setName("mainTable"); // NOI18N
-        mainTable.getTableHeader().setReorderingAllowed(false);
-        tableScrollPane.setViewportView(mainTable);
+        codsTable.setName("codsTable"); // NOI18N
+        codsTable.getTableHeader().setReorderingAllowed(false);
+        codsTableScrollPane.setViewportView(codsTable);
         org.jdesktop.application.ResourceMap resourceMap = org.jdesktop.application.Application.getInstance(trackingnumberwatcher.TrackingNumberWatcherApp.class).getContext().getResourceMap(TrackingNumberWatcherView.class);
-        mainTable.getColumnModel().getColumn(0).setHeaderValue(resourceMap.getString("mainTable.columnModel.title0")); // NOI18N
-        mainTable.getColumnModel().getColumn(1).setHeaderValue(resourceMap.getString("mainTable.columnModel.title1")); // NOI18N
-        mainTable.getColumnModel().getColumn(2).setHeaderValue(resourceMap.getString("mainTable.columnModel.title2")); // NOI18N
+        codsTable.getColumnModel().getColumn(0).setHeaderValue(resourceMap.getString("codsTable.columnModel.title0")); // NOI18N
+        codsTable.getColumnModel().getColumn(1).setHeaderValue(resourceMap.getString("codsTable.columnModel.title1")); // NOI18N
+        codsTable.getColumnModel().getColumn(2).setHeaderValue(resourceMap.getString("codsTable.columnModel.title2")); // NOI18N
 
         buttonsPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
         buttonsPanel.setName("buttonsPanel"); // NOI18N
@@ -311,6 +327,8 @@ public class TrackingNumberWatcherView extends FrameView {
             }
         });
 
+        jSeparator1.setName("jSeparator1"); // NOI18N
+
         javax.swing.GroupLayout buttonsPanelLayout = new javax.swing.GroupLayout(buttonsPanel);
         buttonsPanel.setLayout(buttonsPanelLayout);
         buttonsPanelLayout.setHorizontalGroup(
@@ -327,6 +345,7 @@ public class TrackingNumberWatcherView extends FrameView {
                     .addComponent(atualizarCombo, javax.swing.GroupLayout.Alignment.TRAILING, 0, 100, Short.MAX_VALUE)
                     .addComponent(atualizarButton, javax.swing.GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE))
                 .addContainerGap())
+            .addComponent(jSeparator1, javax.swing.GroupLayout.DEFAULT_SIZE, 124, Short.MAX_VALUE)
         );
         buttonsPanelLayout.setVerticalGroup(
             buttonsPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -337,13 +356,15 @@ public class TrackingNumberWatcherView extends FrameView {
                 .addComponent(detalhesButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(removerButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGap(19, 19, 19)
                 .addComponent(atualizarLabel)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(atualizarCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(atualizarButton)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 78, Short.MAX_VALUE)
+                .addGap(10, 10, 10)
+                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 73, Short.MAX_VALUE)
                 .addComponent(esconderButton)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(sairButton)
@@ -356,7 +377,7 @@ public class TrackingNumberWatcherView extends FrameView {
             contentsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, contentsLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 562, Short.MAX_VALUE)
+                .addComponent(codsTableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 562, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(buttonsPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -366,9 +387,36 @@ public class TrackingNumberWatcherView extends FrameView {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, contentsLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(contentsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(tableScrollPane, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 359, Short.MAX_VALUE)
+                    .addComponent(codsTableScrollPane, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 373, Short.MAX_VALUE)
                     .addComponent(buttonsPanel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
+        );
+
+        addInfo.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+        addInfo.setName("addInfo"); // NOI18N
+
+        ultimaAttLabel.setText(resourceMap.getString("ultimaAttLabel.text")); // NOI18N
+        ultimaAttLabel.setName("ultimaAttLabel"); // NOI18N
+
+        ultimaAttValue.setText(resourceMap.getString("ultimaAttValue.text")); // NOI18N
+        ultimaAttValue.setName("ultimaAttValue"); // NOI18N
+
+        javax.swing.GroupLayout addInfoLayout = new javax.swing.GroupLayout(addInfo);
+        addInfo.setLayout(addInfoLayout);
+        addInfoLayout.setHorizontalGroup(
+            addInfoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, addInfoLayout.createSequentialGroup()
+                .addContainerGap(449, Short.MAX_VALUE)
+                .addComponent(ultimaAttLabel)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(ultimaAttValue)
+                .addContainerGap())
+        );
+        addInfoLayout.setVerticalGroup(
+            addInfoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(addInfoLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addComponent(ultimaAttValue)
+                .addComponent(ultimaAttLabel))
         );
 
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
@@ -377,7 +425,9 @@ public class TrackingNumberWatcherView extends FrameView {
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(mainPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(contents, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(contents, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(addInfo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         mainPanelLayout.setVerticalGroup(
@@ -385,7 +435,9 @@ public class TrackingNumberWatcherView extends FrameView {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, mainPanelLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(contents, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(addInfo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(12, 12, 12))
         );
 
         setComponent(mainPanel);
@@ -407,7 +459,7 @@ public class TrackingNumberWatcherView extends FrameView {
     }//GEN-LAST:event_adicionarButtonActionPerformed
     private void out(String out){System.out.println(out);}
     private void detalhesButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_detalhesButtonActionPerformed
-        if(mainTable.getSelectedRow() != -1)
+        if(codsTable.getSelectedRow() != -1)
         {
             codValue = getCodFromCollum();
             dbConn.showDetailsFrame(getCodFromCollum());
@@ -421,7 +473,7 @@ public class TrackingNumberWatcherView extends FrameView {
         System.exit(0);
     }//GEN-LAST:event_sairButtonActionPerformed
     private void removerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removerButtonActionPerformed
-        model = (DefaultTableModel) mainTable.getModel();
+        model = (DefaultTableModel) codsTable.getModel();
         
         codValue = getCodFromCollum();
         dbConn.delete(codValue, true);
@@ -447,6 +499,7 @@ public class TrackingNumberWatcherView extends FrameView {
         try
         {
             out("" + new Date());
+            ultimaAttValue.setText(new Date().toString());
             rs = dbConn.getNameAndCod();
             while(rs.next())
             {
@@ -456,14 +509,18 @@ public class TrackingNumberWatcherView extends FrameView {
                 out("web  : " + webHash + "\nlocal: " + localHash);
                 if(webHash != localHash)
                 {
-                    out("Processando alterações...");
+                    out("Atualizando dados...");
                     dbConn.delete(cod, false);//remover das tabelas o cod
                     dbConn.insertNewData(cod);//re-inserir o cod na tabela
                     loadSavedData();
-                    out(cod + " MUDOU AMIGO!");//avisar os amiguinhos
                     trayicon.displayMessage("Atualizou!!","Tem novidades sobre o código " + cod + ".\nDê uma olhada!",TrayIcon.MessageType.INFO);
                 }
+                else
+                {
+                    trayicon.displayMessage("Ainda não.","Os pacotes não se moveram, :/",TrayIcon.MessageType.INFO);
+                }
             }
+            
         }
         catch (SQLException ex)
         {
@@ -472,21 +529,25 @@ public class TrackingNumberWatcherView extends FrameView {
         }
     }
     private String getCodFromCollum(){
-        return model.getValueAt(mainTable.getSelectedRow(), 1).toString();
+        return model.getValueAt(codsTable.getSelectedRow(), 1).toString();
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel addInfo;
     private javax.swing.JButton adicionarButton;
     private javax.swing.JButton atualizarButton;
     private javax.swing.JComboBox atualizarCombo;
     private javax.swing.JLabel atualizarLabel;
     private javax.swing.JPanel buttonsPanel;
+    private javax.swing.JTable codsTable;
+    private javax.swing.JScrollPane codsTableScrollPane;
     private javax.swing.JPanel contents;
     private javax.swing.JButton detalhesButton;
     private javax.swing.JButton esconderButton;
+    private javax.swing.JSeparator jSeparator1;
     private javax.swing.JPanel mainPanel;
-    private javax.swing.JTable mainTable;
     private javax.swing.JButton removerButton;
     private javax.swing.JButton sairButton;
-    private javax.swing.JScrollPane tableScrollPane;
+    private javax.swing.JLabel ultimaAttLabel;
+    private javax.swing.JLabel ultimaAttValue;
     // End of variables declaration//GEN-END:variables
 }

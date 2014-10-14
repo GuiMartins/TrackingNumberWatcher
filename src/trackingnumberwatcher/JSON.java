@@ -1,15 +1,13 @@
 package trackingnumberwatcher;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -42,6 +40,7 @@ public class JSON
         }
         catch (IOException ex)
         {
+            JOptionPane.showMessageDialog(null, "Problemas ao submeter o código à API dos correios. (CHECK COD)", ":'(", JOptionPane.ERROR_MESSAGE);
             Logger.getLogger(JSON.class.getName()).log(Level.SEVERE, null, ex);
         }
         return flag;
@@ -71,9 +70,11 @@ public class JSON
             }
         }
         catch (org.json.simple.parser.ParseException ex) {
+            JOptionPane.showMessageDialog(null, "Problemas no 'parsing' do JSON.", ":'(", JOptionPane.ERROR_MESSAGE);
             Logger.getLogger(JSON.class.getName()).log(Level.SEVERE, null, ex);
         }
         catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Problemas ao submeter o código à API dos correios. (PARSING JSON)", ":'(", JOptionPane.ERROR_MESSAGE);
             Logger.getLogger(JSON.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -100,6 +101,7 @@ public class JSON
             in.close();
         }
         catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Problemas ao submeter o código à API dos correios. (WEBHASH)", ":'(", JOptionPane.ERROR_MESSAGE);
             Logger.getLogger(JSON.class.getName()).log(Level.SEVERE, null, ex);
         }
         return all.length();
