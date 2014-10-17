@@ -1,7 +1,12 @@
 package trackingnumberwatcher;
 
+import java.awt.Component;
 import java.util.ArrayList;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 
 public class TrackingNumberWatcherDetailsFrame extends javax.swing.JFrame {
     private DefaultTableModel model;
@@ -25,7 +30,62 @@ public class TrackingNumberWatcherDetailsFrame extends javax.swing.JFrame {
                 al.get(i++).toString()
             });
         }
+        //table fix
+        detailsTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        detailsTable.setFillsViewportHeight(true);
+        
+        update();
     }
+    
+    
+    private void update() {
+        System.out.println("updating");
+
+        adjustJTableRowSizes(detailsTable);
+        for (int i = 0; i < detailsTable.getColumnCount(); i++) {
+            adjustColumnSizes(detailsTable, i, 2);
+        }
+    }
+    private void adjustJTableRowSizes(JTable jTable) {
+        for (int row = 0; row < jTable.getRowCount(); row++) {
+            int maxHeight = 0;
+            for (int column = 0; column < jTable.getColumnCount(); column++) {
+                TableCellRenderer cellRenderer = jTable.getCellRenderer(row, column);
+                Object valueAt = jTable.getValueAt(row, column);
+                Component tableCellRendererComponent = cellRenderer.getTableCellRendererComponent(jTable, valueAt, false, false, row, column);
+                int heightPreferable = tableCellRendererComponent.getPreferredSize().height;
+                maxHeight = Math.max(heightPreferable, maxHeight);
+            }
+            jTable.setRowHeight(row, maxHeight);
+        }
+
+    }
+
+    public void adjustColumnSizes(JTable table, int column, int margin) {
+        DefaultTableColumnModel colModel = (DefaultTableColumnModel) table.getColumnModel();
+        TableColumn col = colModel.getColumn(column);
+        int width;
+
+        TableCellRenderer renderer = col.getHeaderRenderer();
+        if (renderer == null) {
+            renderer = table.getTableHeader().getDefaultRenderer();
+        }
+        Component comp = renderer.getTableCellRendererComponent(table, col.getHeaderValue(), false, false, 0, 0);
+        width = comp.getPreferredSize().width;
+
+        for (int r = 0; r < table.getRowCount(); r++) {
+            renderer = table.getCellRenderer(r, column);
+            comp = renderer.getTableCellRendererComponent(table, table.getValueAt(r, column), false, false, r, column);
+            int currentWidth = comp.getPreferredSize().width;
+            width = Math.max(width, currentWidth);
+        }
+
+        width += 2 * margin;
+
+        col.setPreferredWidth(width);
+        col.setWidth(width);
+    }
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -142,7 +202,7 @@ public class TrackingNumberWatcherDetailsFrame extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 294, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 178, Short.MAX_VALUE)
                 .addContainerGap())
         );
 

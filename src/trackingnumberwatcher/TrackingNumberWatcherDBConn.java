@@ -146,7 +146,7 @@ public class TrackingNumberWatcherDBConn
         
         return rs;
     }
-    public ResultSet getNameAndCod(){
+    public ResultSet selectFromCod(){
         rs = responseQuery("SELECT * FROM " + tableCodName + ";");
         return rs;
     }

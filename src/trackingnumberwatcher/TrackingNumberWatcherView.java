@@ -51,7 +51,7 @@ public class TrackingNumberWatcherView extends FrameView {
             initComponents();
             dbConn.initiateDB();
             loadSavedData();
-            attCheck();
+            attTimer();
         
             if(!SystemTray.isSupported())
                 JOptionPane.showMessageDialog(mainFrame,"Não será possivel esconder o programa na barra de notificação.","ERRO",JOptionPane.ERROR_MESSAGE);
@@ -162,7 +162,7 @@ public class TrackingNumberWatcherView extends FrameView {
         appFrame.show(mainFrame);
         //SystemTray.getSystemTray().remove(trayicon);
     }
-    private void attCheck(){
+    private void attTimer(){
         timer.schedule( new TimerTask()
         {
             public void run()
@@ -187,7 +187,7 @@ public class TrackingNumberWatcherView extends FrameView {
             model = (DefaultTableModel) codsTable.getModel();
             model.setRowCount(0);
             
-            rs = dbConn.getNameAndCod();
+            rs = dbConn.selectFromCod();
             while(rs.next())
             {
                 String nome  = rs.getString("nome");
@@ -446,6 +446,7 @@ public class TrackingNumberWatcherView extends FrameView {
         String nome = "", codigoRastreio = "";
         
         codigoRastreio = (String)JOptionPane.showInputDialog(mainFrame,"Informe o código de Rastreio: ","Adicionando novo objeto",JOptionPane.PLAIN_MESSAGE);
+        codigoRastreio = codigoRastreio.toUpperCase();
         flag = json.isValid(codigoRastreio);
         if(flag)
         {
@@ -473,11 +474,16 @@ public class TrackingNumberWatcherView extends FrameView {
         System.exit(0);
     }//GEN-LAST:event_sairButtonActionPerformed
     private void removerButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_removerButtonActionPerformed
-        model = (DefaultTableModel) codsTable.getModel();
+        codValue = "";
+        if(codsTable.getSelectedRow() != -1)
+        {
+            codValue = getCodFromCollum();
         
-        codValue = getCodFromCollum();
-        dbConn.delete(codValue, true);
-        loadSavedData();
+            dbConn.delete(codValue, true);
+            loadSavedData();
+        }
+        else
+            JOptionPane.showMessageDialog(mainFrame, "Selecione um objeto antes.", "ERRO", JOptionPane.ERROR_MESSAGE);
     }//GEN-LAST:event_removerButtonActionPerformed
     private void esconderButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_esconderButtonActionPerformed
         appFrame.hide(this);
@@ -489,7 +495,7 @@ public class TrackingNumberWatcherView extends FrameView {
         timer.cancel();
         timer = new Timer();
         attRate = atualizarCombo.getSelectedIndex() + 1;
-        attCheck();
+        attTimer();
     }//GEN-LAST:event_atualizarComboActionPerformed
     private void atualizarButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_atualizarButtonActionPerformed
         checkMovementation();
@@ -500,7 +506,7 @@ public class TrackingNumberWatcherView extends FrameView {
         {
             out("" + new Date());
             ultimaAttValue.setText(new Date().toString());
-            rs = dbConn.getNameAndCod();
+            rs = dbConn.selectFromCod();
             while(rs.next())
             {
                 String  cod = rs.getString("cod");
@@ -513,11 +519,7 @@ public class TrackingNumberWatcherView extends FrameView {
                     dbConn.delete(cod, false);//remover das tabelas o cod
                     dbConn.insertNewData(cod);//re-inserir o cod na tabela
                     loadSavedData();
-                    trayicon.displayMessage("Atualizou!!","Tem novidades sobre o código " + cod + ".\nDê uma olhada!",TrayIcon.MessageType.INFO);
-                }
-                else
-                {
-                    trayicon.displayMessage("Ainda não.","Os pacotes não se moveram, :/",TrayIcon.MessageType.INFO);
+                    trayicon.displayMessage("Atualizou!", rs.getString("nome") +" tem novidades!",TrayIcon.MessageType.INFO);
                 }
             }
             
