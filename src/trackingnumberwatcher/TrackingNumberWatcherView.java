@@ -42,7 +42,7 @@ public class TrackingNumberWatcherView extends FrameView {
     private JFrame mainFrame = TrackingNumberWatcherApp.getApplication().getMainFrame();
     private TrackingNumberWatcherApp appFrame = TrackingNumberWatcherApp.getApplication();
     private JSON json = new JSON();
-    private boolean flag = false;
+    private boolean flag = false, first = true;;
     
     public TrackingNumberWatcherView(SingleFrameApplication app){
         super(app);
@@ -488,7 +488,11 @@ public class TrackingNumberWatcherView extends FrameView {
     private void esconderButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_esconderButtonActionPerformed
         appFrame.hide(this);
         mainFrame.setVisible(false); //redundancia da POG over here.
-        trayicon.displayMessage(":D","Estou aqui.",TrayIcon.MessageType.NONE);
+        if(first)
+        {
+            first = false;
+            trayicon.displayMessage("Oi.","Estou aqui.",TrayIcon.MessageType.NONE);
+        }
         
     }//GEN-LAST:event_esconderButtonActionPerformed
     private void atualizarComboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_atualizarComboActionPerformed
@@ -509,9 +513,10 @@ public class TrackingNumberWatcherView extends FrameView {
             rs = dbConn.selectFromCod();
             while(rs.next())
             {
-                String  cod = rs.getString("cod");
-                long webHash = json.getWebHash(cod);
-                long localHash = dbConn.getLocalHash(cod);
+                String cod  =  rs.getString("cod");
+                String nome = rs.getString("nome");
+                int webHash = json.getWebHash(cod);
+                int localHash = dbConn.getLocalHash(cod);
                 out("web  : " + webHash + "\nlocal: " + localHash);
                 if(webHash != localHash)
                 {
@@ -519,10 +524,10 @@ public class TrackingNumberWatcherView extends FrameView {
                     dbConn.delete(cod, false);//remover das tabelas o cod
                     dbConn.insertNewData(cod);//re-inserir o cod na tabela
                     loadSavedData();
-                    trayicon.displayMessage("Atualizou!", rs.getString("nome") +" tem novidades!",TrayIcon.MessageType.INFO);
+                    trayicon.displayMessage("Atualizou!", nome +" tem novidades!",TrayIcon.MessageType.INFO);
+                    checkMovementation();
                 }
             }
-            
         }
         catch (SQLException ex)
         {

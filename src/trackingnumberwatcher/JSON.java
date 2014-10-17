@@ -84,10 +84,10 @@ public class JSON
     public String getJSONString(){
         return all;
     }
-    public long getHash(String all){
+    public int getHash(String all){
         return all.length();
     }
-    public long getWebHash(String cod){
+    public int getWebHash(String cod){
         all = "";
         try
         {
